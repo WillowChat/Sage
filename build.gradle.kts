@@ -90,6 +90,8 @@ dependencies {
     compile("org.slf4j:slf4j-api:1.7.21")
     compile("chat.willow.warren:Warren:$warrenVersion")
     compile("org.jetbrains.kotlinx:kotlinx-coroutines-core:0.13")
+    compile("com.squareup.retrofit2:retrofit:2.2.0")
+    compile("com.squareup.retrofit2:converter-moshi:2.2.0")
 
     runtime("org.slf4j:slf4j-simple:1.7.21")
 

@@ -1,9 +1,12 @@
 package chat.willow.sage
 
+import chat.willow.sage.bunnies.BunniesApi
 import chat.willow.sage.helper.loggerFor
 import chat.willow.warren.WarrenClient
 import chat.willow.warren.event.ChannelMessageEvent
 import kotlinx.coroutines.experimental.*
+import retrofit2.Retrofit
+import retrofit2.converter.moshi.MoshiConverterFactory
 
 object Sage {
 
@@ -28,6 +31,13 @@ object Sage {
             argChannels.forEach { channel(it) }
         }
 
+        val retrofit = Retrofit.Builder()
+                .baseUrl("https://api.bunnies.io")
+                .addConverterFactory(MoshiConverterFactory.create())
+                .build()
+
+        val bunnyApi = retrofit.create(BunniesApi::class.java)
+
         irc.events.on(ChannelMessageEvent::class) {
             if (it.user.nick != "carrot") {
                 return@on
@@ -39,8 +49,16 @@ object Sage {
                 }
 
                 "bunny me" -> async(CommonPool) {
-                    delay(1000)
-                    it.user.send("async bunny api request after 1 second")
+                    val bunnyRequest = bunnyApi.getBunny("random", media = "gif")
+                    val response = bunnyRequest.execute()
+
+                    if (response.isSuccessful) {
+                        val bunny = response.body()
+
+                        it.user.send("#${bunny.id}: https://bunnies.io/#${bunny.id} ${bunny.media["gif"]}")
+                    } else {
+                        it.user.send("failed to get a bunny :(")
+                    }
                 }
             }
         }
