@@ -47,6 +47,10 @@ configure<ApplicationPluginConvention> {
     mainClassName = "chat.willow.sage.Sage"
 }
 
+configure<org.jetbrains.kotlin.gradle.dsl.KotlinProjectExtension> {
+    experimental.coroutines = Coroutines.ENABLE
+}
+
 jacoco {
     toolVersion = "0.7.9"
 }
@@ -85,6 +89,7 @@ dependencies {
     compile(kotlinModule("reflect", kotlinVersion as String))
     compile("org.slf4j:slf4j-api:1.7.21")
     compile("chat.willow.warren:Warren:$warrenVersion")
+    compile("org.jetbrains.kotlinx:kotlinx-coroutines-core:0.13")
 
     runtime("org.slf4j:slf4j-simple:1.7.21")
 

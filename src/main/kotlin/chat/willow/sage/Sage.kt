@@ -3,6 +3,7 @@ package chat.willow.sage
 import chat.willow.sage.helper.loggerFor
 import chat.willow.warren.WarrenClient
 import chat.willow.warren.event.ChannelMessageEvent
+import kotlinx.coroutines.experimental.*
 
 object Sage {
 
@@ -32,8 +33,15 @@ object Sage {
                 return@on
             }
 
-            if (it.message == "rabbit party") {
-                it.user.send("🐰🎉")
+            when (it.message) {
+                "rabbit party" -> async(CommonPool) {
+                    it.user.send("🐰🎉")
+                }
+
+                "bunny me" -> async(CommonPool) {
+                    delay(1000)
+                    it.user.send("async bunny api request after 1 second")
+                }
             }
         }
 
