@@ -28,7 +28,13 @@ object Sage {
         }
 
         irc.events.on(ChannelMessageEvent::class) {
-            LOGGER.info("channel message: $it")
+            if (it.user.nick != "carrot") {
+                return@on
+            }
+
+            if (it.message == "rabbit party") {
+                it.user.send("🐰🎉")
+            }
         }
 
         irc.start()
