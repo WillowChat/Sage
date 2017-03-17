@@ -1,4 +1,4 @@
-package chat.willow.sage.bunnies
+package chat.willow.sage.api
 
 import retrofit2.Call
 import retrofit2.http.GET

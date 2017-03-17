@@ -1,16 +1,16 @@
 package chat.willow.sage
 
-import chat.willow.sage.bunnies.BunniesApi
+import chat.willow.sage.handler.BunniesHandler
+import chat.willow.sage.handler.RabbitPartyHandler
 import chat.willow.sage.helper.loggerFor
 import chat.willow.warren.WarrenClient
 import chat.willow.warren.event.ChannelMessageEvent
-import kotlinx.coroutines.experimental.*
-import retrofit2.Retrofit
-import retrofit2.converter.moshi.MoshiConverterFactory
+import kotlinx.coroutines.experimental.CommonPool
+import kotlinx.coroutines.experimental.async
 
-object Sage {
+object SageRunner {
 
-    private val LOGGER = loggerFor<Sage>()
+    private val LOGGER = loggerFor<SageRunner>()
 
     @JvmStatic fun main(args: Array<String>) {
         LOGGER.info("hello, sage!")
@@ -24,6 +24,21 @@ object Sage {
         val argUser = args[1]
         val argChannels = args[2].split(delimiters = ',')
 
+        Sage().start(argServer, argUser, argChannels)
+    }
+
+}
+
+class Sage {
+
+    private val LOGGER = loggerFor<Sage>()
+
+    private val handlers = listOf(
+            BunniesHandler(),
+            RabbitPartyHandler()
+    )
+
+    fun start(argServer: String, argUser: String, argChannels: List<String>) {
         val irc = WarrenClient.build {
             server(argServer)
             user(argUser)
@@ -31,39 +46,18 @@ object Sage {
             argChannels.forEach { channel(it) }
         }
 
-        val retrofit = Retrofit.Builder()
-                .baseUrl("https://api.bunnies.io")
-                .addConverterFactory(MoshiConverterFactory.create())
-                .build()
-
-        val bunnyApi = retrofit.create(BunniesApi::class.java)
-
-        irc.events.on(ChannelMessageEvent::class) {
-            if (it.user.nick != "carrot") {
-                return@on
-            }
-
-            when (it.message) {
-                "rabbit party" -> async(CommonPool) {
-                    it.user.send("🐰🎉")
-                }
-
-                "bunny me" -> async(CommonPool) {
-                    val bunnyRequest = bunnyApi.getBunny("random", media = "gif")
-                    val response = bunnyRequest.execute()
-
-                    if (response.isSuccessful) {
-                        val bunny = response.body()
-
-                        it.user.send("#${bunny.id}: https://bunnies.io/#${bunny.id} ${bunny.media["gif"]}")
-                    } else {
-                        it.user.send("failed to get a bunny :(")
-                    }
-                }
-            }
-        }
+        irc.events.on(ChannelMessageEvent::class) { handle(it) }
 
         irc.start()
+    }
+
+    private fun handle(event: ChannelMessageEvent) {
+        handlers.filter { it.handles(event.message) }
+                .forEach {
+                    LOGGER.info("$it handling: ${event.message}")
+
+                    async(CommonPool) { it.handle(event) }
+                }
     }
 
 }
