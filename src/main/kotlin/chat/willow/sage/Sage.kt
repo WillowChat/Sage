@@ -1,12 +1,17 @@
 package chat.willow.sage
 
+import chat.willow.sage.config.Config
 import chat.willow.sage.handler.BunniesHandler
 import chat.willow.sage.handler.RabbitPartyHandler
 import chat.willow.sage.helper.loggerFor
 import chat.willow.warren.WarrenClient
 import chat.willow.warren.event.ChannelMessageEvent
+import com.squareup.moshi.JsonAdapter
+import com.squareup.moshi.Moshi
 import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.async
+import java.nio.file.Files
+import java.nio.file.Paths
 
 object SageRunner {
 
@@ -15,16 +20,20 @@ object SageRunner {
     @JvmStatic fun main(args: Array<String>) {
         LOGGER.info("hello, sage!")
 
-        if (args.size < 3) {
-            LOGGER.error("Usage: server user #comma,#separated,#channels")
-            return
+        val configJson = try {
+            String(Files.readAllBytes(Paths.get("config.json")))
+        } catch (exception: Exception) {
+            LOGGER.error("Failed to load config: $exception")
+
+            return@main
         }
 
-        val argServer = args[0]
-        val argUser = args[1]
-        val argChannels = args[2].split(delimiters = ',')
+        val moshi = Moshi.Builder().build()
 
-        Sage().start(argServer, argUser, argChannels)
+        val configAdapter = moshi.adapter(Config::class.java)
+        val config = configAdapter.fromJson(configJson)
+
+        Sage().start(config)
     }
 
 }
@@ -38,12 +47,12 @@ class Sage {
             RabbitPartyHandler()
     )
 
-    fun start(argServer: String, argUser: String, argChannels: List<String>) {
+    fun start(config: Config) {
         val irc = WarrenClient.build {
-            server(argServer)
-            user(argUser)
+            server(config.connection.server)
+            user(config.connection.user)
 
-            argChannels.forEach { channel(it) }
+            config.connection.channels.forEach { channel(it) }
         }
 
         irc.events.on(ChannelMessageEvent::class) { handle(it) }

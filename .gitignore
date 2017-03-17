@@ -1,3 +1,6 @@
+.env
+run
+
 *.class
 
 # Mobile Tools for Java (J2ME)
@@ -26,9 +29,6 @@ out
 
 # Swap files
 *~
-
-# Config files
-*config.json
 
 # Certificates
 *.pem
