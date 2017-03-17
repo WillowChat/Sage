@@ -2,6 +2,8 @@
   "connection": {
     "server": "",
     "user": "",
-    "channels": ["",""]
+    "channels": ["",""],
+    "reconnections": 5,
+    "reconnectTimer": 60
   }
 }

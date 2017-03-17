@@ -1,5 +1,6 @@
 package chat.willow.sage.handler
 
+import chat.willow.kale.irc.CharacterCodes
 import chat.willow.sage.api.BunniesApi
 import chat.willow.warren.event.ChannelMessageEvent
 import okhttp3.OkHttpClient
@@ -28,7 +29,10 @@ class BunniesHandler: IHandler {
     }
 
     override fun handle(event: ChannelMessageEvent) {
-        val bunnyRequest = bunnyApi.getBunny("random", media = "gif")
+        val arguments = event.message.split(CharacterCodes.SPACE, limit = 5)
+
+        val id = arguments.getOrNull(1) ?: "random"
+        val bunnyRequest = bunnyApi.getBunny(id, media = "gif")
         val response = bunnyRequest.execute()
 
         if (response.isSuccessful) {
